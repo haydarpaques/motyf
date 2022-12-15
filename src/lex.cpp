@@ -9,13 +9,14 @@ Motyf::Lex::Lex(const char *str)
 
 	this->text = (char *) std::malloc(sz + sizeof(char));
 	if (this->text == NULL) {
-		// TODO: update error state
+		this->error = Error::AllocationFailure;
 		return;
 	}
 
 	std::memcpy(this->text, str, sz);
 	this->text[sz] = '\0';
 	this->current = text;
+	this->error = Error::NoError;
 }
 
 Motyf::Lex::~Lex()
@@ -24,6 +25,16 @@ Motyf::Lex::~Lex()
 		return;
 
 	std::free(this->text);
+}
+
+bool Motyf::Lex::isError() const
+{
+	return this->error != Motyf::Error::NoError;
+}
+
+Motyf::Error Motyf::Lex::getError() const
+{
+	return this->error;
 }
 
 Motyf::Token Motyf::Lex::next()

@@ -2,6 +2,7 @@
 #define MOTYF_LEX_HPP
 
 #include <cstddef>
+#include "error.hpp"
 
 #define MOTYF_LEX_MAXBUF (128)
 
@@ -50,6 +51,7 @@ namespace Motyf {
 		char        *text;
 		const char  *current;
 		std::size_t  length;
+		Error        error;
 		char         lexeme[MOTYF_LEX_MAXBUF];
 
 		/**
@@ -89,6 +91,18 @@ namespace Motyf {
 		Lex(const char *);
 
 		~Lex();
+
+		/**
+		 * @brief
+		 * Checks whether the lexical analyzer is in error state.
+		 */
+		bool isError() const;
+
+		/**
+		 * @brief
+		 * Returns last error occured.
+		 */
+		Error getError() const;
 
 		/**
 		 * @brief
