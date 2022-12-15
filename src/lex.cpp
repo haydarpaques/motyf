@@ -159,7 +159,7 @@ Motyf::Token Motyf::Lex::lex(bool proceed)
 
 			this->lexeme[this->length] = '\0';
 			lex_return(Token::ID, this->length);
-		} else if (isNumeric(*(this->current))) {
+		} else {
 			while (isNumeric(*(this->current + this->length))) {
 				this->lexeme[this->length] = *(this->current + this->length);
 				++(this->length);
