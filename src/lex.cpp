@@ -64,21 +64,11 @@ Motyf::Token Motyf::Lex::lex(bool proceed)
 	while (this->isIgnored(*(this->current)))
 		++(this->current);
 
-	// ignore comments
-	if (*(this->current) == '/') {
-		// inline comments
-		if (*(this->current + 1) == '/') {
-			for (;*(this->current) != '\n'; ++(this->current));
-
+	while (*(this->current) == '/' && *(this->current + 1) == '/') {
+		for (;*(this->current) != '\n'; ++(this->current)) /* nothing */;
+		++(this->current);
+		while (this->isIgnored(*(this->current)))
 			++(this->current);
-			while (this->isIgnored(*(this->current)))
-				++(this->current);
-		}
-
-		// multiline comments
-		if (*(this->current + 1) == '*') {
-			// TODO
-		}
 	}
 
 	this->length    = 0UL;

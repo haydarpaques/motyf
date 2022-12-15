@@ -2,10 +2,10 @@
 #define MOTYF_ERROR_HPP
 
 namespace Motyf {
-    enum class Error {
-        NoError,
-        AllocationFailure
-    };
+	enum class Error {
+		NoError,
+		AllocationFailure
+	};
 }
 
 #endif
