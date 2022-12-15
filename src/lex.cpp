@@ -57,19 +57,23 @@ bool Motyf::Lex::matchLookahead(Token t)
 	return t == this->lex(false);
 }
 
-#define lex_return(t) \
-do { if (proceed) ++(this->current); return t; } while(false)
+#define lex_return(t,i) \
+do { if (proceed) (this->current) += i; return t; } while(false)
 Motyf::Token Motyf::Lex::lex(bool proceed)
 {
 	while (this->isIgnored(*(this->current)))
 		++(this->current);
 
+	// skip inline comments
 	while (*(this->current) == '/' && *(this->current + 1) == '/') {
-		for (;*(this->current) != '\n'; ++(this->current)) /* nothing */;
+		for (; *(this->current) != '\n'; ++(this->current))
+			/* nothing */;
 		++(this->current);
 		while (this->isIgnored(*(this->current)))
 			++(this->current);
 	}
+
+	// TODO: skip multiline comments
 
 	this->length    = 0UL;
 	this->lexeme[0] = '\0';
@@ -79,71 +83,71 @@ Motyf::Token Motyf::Lex::lex(bool proceed)
 	case '\0':
 		return Token::Null;
 	case '\n':
-		lex_return(Token::Newline);
+		lex_return(Token::Newline, 1);
 	case '~':
-		lex_return(Token::Tilde);
+		lex_return(Token::Tilde, 1);
 	case '`':
-		lex_return(Token::Backtick);
+		lex_return(Token::Backtick, 1);
 	case '!':
-		lex_return(Token::Exclamation);
+		lex_return(Token::Exclamation, 1);
 	case '@':
-		lex_return(Token::At);
+		lex_return(Token::At, 1);
 	case '#':
-		lex_return(Token::NumberSign);
+		lex_return(Token::NumberSign, 1);
 	case '$':
-		lex_return(Token::Dollar);
+		lex_return(Token::Dollar, 1);
 	case '%':
-		lex_return(Token::Percent);
+		lex_return(Token::Percent, 1);
 	case '^':
-		lex_return(Token::Caret);
+		lex_return(Token::Caret, 1);
 	case '&':
-		lex_return(Token::Ampersand);
+		lex_return(Token::Ampersand, 1);
 	case '*':
-		lex_return(Token::Asterisk);
+		lex_return(Token::Asterisk, 1);
 	case '(':
-		lex_return(Token::LeftParenthesis);
+		lex_return(Token::LeftParenthesis, 1);
 	case ')':
-		lex_return(Token::RightParenthesis);
+		lex_return(Token::RightParenthesis, 1);
 	case '-':
-		lex_return(Token::Minus);
+		lex_return(Token::Minus, 1);
 	case '_':
-		lex_return(Token::Underscore);
+		lex_return(Token::Underscore, 1);
 	case '=':
-		lex_return(Token::EqualSign);
+		lex_return(Token::EqualSign, 1);
 	case '+':
-		lex_return(Token::Plus);
+		lex_return(Token::Plus, 1);
 	case '[':
-		lex_return(Token::LeftBracket);
+		lex_return(Token::LeftBracket, 1);
 	case '{':
-		lex_return(Token::LeftBrace);
+		lex_return(Token::LeftBrace, 1);
 	case ']':
-		lex_return(Token::RightBracket);
+		lex_return(Token::RightBracket, 1);
 	case '}':
-		lex_return(Token::RightBrace);
+		lex_return(Token::RightBrace, 1);
 	case '\\':
-		lex_return(Token::Backslash);
+		lex_return(Token::Backslash, 1);
 	case '|':
-		lex_return(Token::VerticalBar);
+		lex_return(Token::VerticalBar, 1);
 	case ';':
-		lex_return(Token::Semicolon);
+		lex_return(Token::Semicolon, 1);
 	case ':':
-		lex_return(Token::Colon);
+		lex_return(Token::Colon, 1);
 	case '\'':
-		lex_return(Token::Apostrophe);
+		lex_return(Token::Apostrophe, 1);
 	case '"':
-		lex_return(Token::Quotation);
+		lex_return(Token::Quotation, 1);
 	case ',':
-		lex_return(Token::Comma);
+		lex_return(Token::Comma, 1);
 	case '<':
-		lex_return(Token::LeftChevron);
+		lex_return(Token::LeftChevron, 1);
 	case '.':
-		lex_return(Token::Dot);
+		lex_return(Token::Dot, 1);
 	case '>':
-		lex_return(Token::RightChevron);
+		lex_return(Token::RightChevron, 1);
 	case '/':
-		lex_return(Token::Slash);
+		lex_return(Token::Slash, 1);
 	case '?':
-		lex_return(Token::QuestionMark);
+		lex_return(Token::QuestionMark, 1);
 
 	default:
 		// TODO: check buffer size to prevent buffer overrun
@@ -173,7 +177,7 @@ Motyf::Token Motyf::Lex::lex(bool proceed)
 			return Token::Numeric;
 		}
 
-		lex_return(Token::Unknown);
+		lex_return(Token::Unknown, 1);
 	}
 }
 
