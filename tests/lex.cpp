@@ -2,39 +2,39 @@
 #include <string>
 #include "lex.hpp"
 
-extern const char *tokenString[];
-int testLex(const char *);
+extern const char *token_string[];
+int test_lex(const char *);
 
 int main(void)
 {
 	std::string in;
 	std::getline(std::cin, in, '\0');
 
-	if (testLex(in.c_str()) == -1)
+	if (test_lex(in.c_str()) == -1)
 		exit(EXIT_FAILURE);
 
 	exit(EXIT_SUCCESS);
 }
 
-int testLex(const char *in)
+int test_lex(const char *in)
 {
-	Motyf::Lex   lex(in);
-	Motyf::Token token;
+	motyf::lex   le(in);
+	motyf::token to;
 
-	if (lex.isError())
+	if (le.is_error())
 		return -1;
 
-	while ((token = lex.next()) != Motyf::Token::Null) {
-		std::cout << "Get: " << tokenString[(int) token] << '\n';
+	while ((to = le.next()) != motyf::token::null) {
+		std::cout << "Get: " << token_string[(int) to] << '\n';
 
-		if (token == Motyf::Token::ID || token == Motyf::Token::Numeric)
-			std::cout << "\tLexeme: \"" << lex.getLexeme() << "\"\n";
+		if (to == motyf::token::id || to == motyf::token::numeric)
+			std::cout << "\tLexeme: \"" << le.get_lexeme() << "\"\n";
 	}
 
 	return 0;
 }
 
-const char *tokenString[] = {
+const char *token_string[] = {
 	"Null", "Unknown", "Newline", "Tilde", "Backtick", "Exclamation", "At", "NumberSign",
 	"Dollar", "Percent", "Caret", "Ampersand", "Asterisk", "LeftParenthesis",
 	"RightParenthesis", "Minus", "Underscore", "EqualSign", "Plus", "LeftBracket",
