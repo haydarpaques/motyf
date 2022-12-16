@@ -76,7 +76,7 @@ namespace Motyf {
 		/**
 		 * @brief
 		 * Returns true if provided char marks the beginning of a keyword
-		 * an identifier.
+		 * or an identifier.
 		 */
 		bool isKeyOrIdentifier(char);
 
