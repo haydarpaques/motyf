@@ -3,22 +3,23 @@
 #include <cctype>
 #include "lex.hpp"
 
-Motyf::Lex::Lex(const char *str)
+motyf::lex::lex(const char *str)
 {
 	std::size_t sz = std::strlen(str);
 
 	this->text = (char *) std::malloc(sz + sizeof(char));
 	if (this->text == NULL) {
-		// TODO: update error state
+		this->err = error::allocation_failure;
 		return;
 	}
 
 	std::memcpy(this->text, str, sz);
 	this->text[sz] = '\0';
 	this->current = text;
+	this->err = error::no_error;
 }
 
-Motyf::Lex::~Lex()
+motyf::lex::~lex()
 {
 	if (this->text == NULL)
 		return;
@@ -26,49 +27,53 @@ Motyf::Lex::~Lex()
 	std::free(this->text);
 }
 
-Motyf::Token Motyf::Lex::next()
+bool motyf::lex::is_error() const
 {
-	return this->lex(true);
+	return this->err != motyf::error::no_error;
 }
 
-Motyf::Token Motyf::Lex::lookahead()
+motyf::error motyf::lex::get_error() const
 {
-	return this->lex(false);
+	return this->err;
 }
 
-bool Motyf::Lex::match(Token t)
+motyf::token motyf::lex::next()
 {
-	return t == this->lex(true);
+	return this->analyze(true);
 }
 
-bool Motyf::Lex::matchLookahead(Token t)
+motyf::token motyf::lex::lookahead()
 {
-	return t == this->lex(false);
+	return this->analyze(false);
 }
 
-#define lex_return(t) \
-do { if (proceed) ++(this->current); return t; } while(false)
-Motyf::Token Motyf::Lex::lex(bool proceed)
+bool motyf::lex::match(token t)
 {
-	while (this->isIgnored(*(this->current)))
+	return t == this->analyze(true);
+}
+
+bool motyf::lex::match_lookahead(token t)
+{
+	return t == this->analyze(false);
+}
+
+#define lex_return(t,i) \
+do { if (proceed) (this->current) += i; return t; } while(false)
+motyf::token motyf::lex::analyze(bool proceed)
+{
+	while (this->is_ignored(*(this->current)))
 		++(this->current);
 
-	// ignore comments
-	if (*(this->current) == '/') {
-		// inline comments
-		if (*(this->current + 1) == '/') {
-			for (;*(this->current) != '\n'; ++(this->current));
-
+	// skip inline comments
+	while (*(this->current) == '/' && *(this->current + 1) == '/') {
+		for (; *(this->current) != '\n'; ++(this->current))
+			/* nothing */;
+		++(this->current);
+		while (this->is_ignored(*(this->current)))
 			++(this->current);
-			while (this->isIgnored(*(this->current)))
-				++(this->current);
-		}
-
-		// multiline comments
-		if (*(this->current + 1) == '*') {
-			// TODO
-		}
 	}
+
+	// TODO: skip multiline comments
 
 	this->length    = 0UL;
 	this->lexeme[0] = '\0';
@@ -76,107 +81,99 @@ Motyf::Token Motyf::Lex::lex(bool proceed)
 	switch (*(this->current))
 	{
 	case '\0':
-		return Token::Null;
+		return token::null;
 	case '\n':
-		lex_return(Token::Newline);
+		lex_return(token::newline, 1);
 	case '~':
-		lex_return(Token::Tilde);
+		lex_return(token::tilde, 1);
 	case '`':
-		lex_return(Token::Backtick);
+		lex_return(token::backtick, 1);
 	case '!':
-		lex_return(Token::Exclamation);
+		lex_return(token::exclamation, 1);
 	case '@':
-		lex_return(Token::At);
+		lex_return(token::at, 1);
 	case '#':
-		lex_return(Token::NumberSign);
+		lex_return(token::number_sign, 1);
 	case '$':
-		lex_return(Token::Dollar);
+		lex_return(token::dollar, 1);
 	case '%':
-		lex_return(Token::Percent);
+		lex_return(token::percent, 1);
 	case '^':
-		lex_return(Token::Caret);
+		lex_return(token::caret, 1);
 	case '&':
-		lex_return(Token::Ampersand);
+		lex_return(token::ampersand, 1);
 	case '*':
-		lex_return(Token::Asterisk);
+		lex_return(token::asterisk, 1);
 	case '(':
-		lex_return(Token::LeftParenthesis);
+		lex_return(token::left_parenthesis, 1);
 	case ')':
-		lex_return(Token::RightParenthesis);
+		lex_return(token::right_parenthesis, 1);
 	case '-':
-		lex_return(Token::Minus);
+		lex_return(token::minus, 1);
 	case '_':
-		lex_return(Token::Underscore);
+		lex_return(token::underscore, 1);
 	case '=':
-		lex_return(Token::EqualSign);
+		lex_return(token::equal_sign, 1);
 	case '+':
-		lex_return(Token::Plus);
+		lex_return(token::plus, 1);
 	case '[':
-		lex_return(Token::LeftBracket);
+		lex_return(token::left_bracket, 1);
 	case '{':
-		lex_return(Token::LeftBrace);
+		lex_return(token::left_brace, 1);
 	case ']':
-		lex_return(Token::RightBracket);
+		lex_return(token::right_bracket, 1);
 	case '}':
-		lex_return(Token::RightBrace);
+		lex_return(token::right_brace, 1);
 	case '\\':
-		lex_return(Token::Backslash);
+		lex_return(token::backslash, 1);
 	case '|':
-		lex_return(Token::VerticalBar);
+		lex_return(token::vertical_bar, 1);
 	case ';':
-		lex_return(Token::Semicolon);
+		lex_return(token::semicolon, 1);
 	case ':':
-		lex_return(Token::Colon);
+		lex_return(token::colon, 1);
 	case '\'':
-		lex_return(Token::Apostrophe);
+		lex_return(token::apostrophe, 1);
 	case '"':
-		lex_return(Token::Quotation);
+		lex_return(token::quotation, 1);
 	case ',':
-		lex_return(Token::Comma);
+		lex_return(token::comma, 1);
 	case '<':
-		lex_return(Token::LeftChevron);
+		lex_return(token::left_chevron, 1);
 	case '.':
-		lex_return(Token::Dot);
+		lex_return(token::dot, 1);
 	case '>':
-		lex_return(Token::RightChevron);
+		lex_return(token::right_chevron, 1);
 	case '/':
-		lex_return(Token::Slash);
+		lex_return(token::slash, 1);
 	case '?':
-		lex_return(Token::QuestionMark);
+		lex_return(token::question_mark, 1);
 
 	default:
 		// TODO: check buffer size to prevent buffer overrun
-		if (isKeyOrIdentifier(*(this->current))) {
-			while (isLegal(*(this->current + this->length))) {
+		if (is_key_or_id(*(this->current))) {
+			while (is_legal(*(this->current + this->length))) {
 				this->lexeme[this->length] = *(this->current + this->length);
 				++(this->length);
 			}
 
 			this->lexeme[this->length] = '\0';
-
-			if (proceed)
-				this->current += this->length;
-
-			return Token::ID;
-		} else if (isNumeric(*(this->current))) {
-			while (isNumeric(*(this->current + this->length))) {
+			lex_return(token::id, this->length);
+		} else {
+			while (is_numeric(*(this->current + this->length))) {
 				this->lexeme[this->length] = *(this->current + this->length);
 				++(this->length);
 			}
 
 			this->lexeme[this->length] = '\0';
-
-			if (proceed)
-				this->current += this->length;
-
-			return Token::Numeric;
+			lex_return(token::numeric, this->length);
 		}
 
-		lex_return(Token::Unknown);
+		lex_return(token::unknown, 1);
 	}
 }
 
-bool Motyf::Lex::isIgnored(char c)
+bool motyf::lex::is_ignored(char c)
 {
 	if ((c > 0x00 && c < 0x0a) || (c > 0x0a && c < 0x21) || c == 0x7f)
 		return true;
@@ -184,7 +181,7 @@ bool Motyf::Lex::isIgnored(char c)
 	return false;
 }
 
-bool Motyf::Lex::isLegal(char c)
+bool motyf::lex::is_legal(char c)
 {
 	if (std::isalnum(c) || c == 0x2d || c == 0x5f)
 		return true;
@@ -192,7 +189,7 @@ bool Motyf::Lex::isLegal(char c)
 	return false;
 }
 
-bool Motyf::Lex::isKeyOrIdentifier(char c)
+bool motyf::lex::is_key_or_id(char c)
 {
 	if (std::isalpha(c) || c == 0x5f)
 		return true;
@@ -200,12 +197,12 @@ bool Motyf::Lex::isKeyOrIdentifier(char c)
 	return false;
 }
 
-bool Motyf::Lex::isNumeric(char c)
+bool motyf::lex::is_numeric(char c)
 {
 	return (bool) std::isdigit(c);
 }
 
-const char *Motyf::Lex::getLexeme() const
+const char *motyf::lex::get_lexeme() const
 {
 	return this->lexeme;
 }
